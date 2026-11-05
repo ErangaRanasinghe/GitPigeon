@@ -8,7 +8,7 @@ Delivers your Git commits on schedule.
 
 GitPigeon is a small Windows tool that pushes your Git repositories automatically, daily, every few hours, or once on a chosen date. It works alongside TortoiseGit, because both use the same Git for Windows underneath.
 
-Developed by EMR Industries · Version 1.0 · Built 2026.11.05
+Developed by EMR Industries · Version 1.1 · Built 2026.11.05
 
 ---
 
@@ -33,7 +33,7 @@ Developed by EMR Industries · Version 1.0 · Built 2026.11.05
 
 ## Install
 
-1. Download `GitPigeon-v1.0.zip` from the **Releases** page.
+1. Download `GitPigeon-v1.1.zip` from the **Releases** page.
 2. Extract it to a folder only you can edit, for example:
    `%LOCALAPPDATA%\GitPigeon`
 3. Double-click **`GitPigeon.exe`** (the pigeon icon).
@@ -53,7 +53,7 @@ Windows shows *Windows protected your PC* (SmartScreen) or *Unknown Publisher* o
 
 **Option A: Unblock the zip before extracting**
 
-1. Right-click `GitPigeon-v1.0.zip` and choose **Properties**.
+1. Right-click `GitPigeon-v1.1.zip` and choose **Properties**.
 2. Tick **Unblock** at the bottom of the **General** tab, then click **OK**.
 3. Extract the zip and open `GitPigeon.exe`. No warning appears.
 
@@ -94,6 +94,7 @@ Turning SmartScreen off is not recommended. It protects you from genuinely harmf
 | Commit all changes before pushing | Stages and commits everything first (see *Safety*) |
 | Start on / at | Date and time of the first run |
 | Daily / Every N hours / Once only | How often to push |
+| Wake the PC from sleep to push | Wakes a sleeping PC at the scheduled time (see *How schedules run*) |
 
 Buttons:
 
@@ -111,6 +112,22 @@ Shows the version, developer and build date, and where the log file and schedule
 <p align="center">
   <img src="assets/screenshots/about.png" alt="GitPigeon About tab" width="560">
 </p>
+
+## How schedules run
+
+GitPigeon does not need to be open. **Save schedule** creates a task in Windows Task Scheduler (folder **GitPigeon**), and Windows runs `gitpigeon-push.ps1` in the background at the scheduled time. Schedules survive closing GitPigeon, logging off and restarting.
+
+| Situation | What happens |
+|---|---|
+| PC was **off** at the scheduled time | The missed push runs a few minutes after you turn the PC on and log in. Several missed runs are caught up with one push. |
+| PC was **asleep** | With *Wake the PC from sleep to push* ticked, Windows wakes it and pushes. Otherwise the missed push runs after the PC wakes. |
+| Laptop on **battery** | Pushes run on battery and are not stopped if you unplug. |
+| **No network** yet (for example, just after waking) | GitPigeon waits and retries for about a minute before logging an error. The next scheduled run tries again. |
+| You are **logged off** | Schedules run only while you are logged in, because they use your saved Git login. |
+
+**Wake from sleep on laptops:** Windows must allow wake timers. Open **Control Panel > Power Options > Change plan settings > Change advanced power settings > Sleep > Allow wake timers** and set it to **Enable** (for both *On battery* and *Plugged in* if you want both). Some laptops also disable wake timers in their own power software.
+
+Schedules saved with version 1.0 do not have the battery and wake settings. Select each one in the list and click **Save schedule** again to update it.
 
 ## Log
 
@@ -149,7 +166,7 @@ Allow `git.exe` only, not `powershell.exe`.
 Push once by hand (TortoiseGit or `git push`) so your credentials are saved, then try again. For SSH with Pageant, make sure Pageant is running with your key loaded.
 
 **A schedule did not run**
-Open Task Scheduler (`taskschd.msc`), go to the **GitPigeon** folder and check the task's *Last Run Result* and *History*.
+Check the cases in *How schedules run* first. Then open Task Scheduler (`taskschd.msc`), go to the **GitPigeon** folder and check the task's *Last Run Result* and *History*.
 
 ## Uninstall
 

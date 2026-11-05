@@ -3,7 +3,7 @@
   Keep gitpigeon-push.ps1 in the same folder and the images in assets\. Start with GitPigeon.exe (or "Start GitPigeon.bat").
 
   Developed by : EMR Industries
-  Version      : 1.0
+  Version      : 1.1
   Built date   : 2026.11.05
 #>
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
@@ -13,7 +13,7 @@ Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 $AppName      = "GitPigeon"
 $AppTagline   = "Delivers your Git commits on schedule."
 $AppDeveloper = "EMR Industries"
-$AppVersion   = "1.0"
+$AppVersion   = "1.1"
 $AppBuildDate = "2026.11.05"
 
 # Remove the "downloaded from the internet" mark from GitPigeon's own files, so the
@@ -42,7 +42,7 @@ if (-not $pushScript.StartsWith($env:USERPROFILE, [StringComparison]::OrdinalIgn
 # ---------- form + helper ----------
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "$AppName v$AppVersion"
-$form.Size = New-Object System.Drawing.Size(645, 690)
+$form.Size = New-Object System.Drawing.Size(645, 718)
 $form.StartPosition = "CenterScreen"
 $form.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 $form.FormBorderStyle = "FixedSingle"
@@ -55,7 +55,7 @@ if (Test-Path $iconPath) { $form.Icon = New-Object System.Drawing.Icon($iconPath
 # ---------- tabs: Scheduler + About ----------
 $tabs = New-Object Windows.Forms.TabControl
 $tabs.Location = New-Object System.Drawing.Point(6, 6)
-$tabs.Size = New-Object System.Drawing.Size(618, 640)
+$tabs.Size = New-Object System.Drawing.Size(618, 668)
 $pageMain  = New-Object Windows.Forms.TabPage; $pageMain.Text  = "Scheduler"
 $pageAbout = New-Object Windows.Forms.TabPage; $pageAbout.Text = "About"
 $tabs.TabPages.AddRange(@($pageMain, $pageAbout))
@@ -118,7 +118,7 @@ Add-Ctl (New-Object Windows.Forms.Label) 300 76 220 18 "(leave empty = current b
 $chkCommit = Add-Ctl (New-Object Windows.Forms.CheckBox) 100 98 400 22 "Commit all changes before pushing"
 
 # ---------- schedule ----------
-$grp = Add-Ctl (New-Object Windows.Forms.GroupBox) 15 128 575 80 "Schedule"
+$grp = Add-Ctl (New-Object Windows.Forms.GroupBox) 15 128 575 108 "Schedule"
 # Row 1: start date + time (used by all three options)
 $lblStart = New-Object Windows.Forms.Label; $lblStart.Text = "Start on"; $lblStart.Location = "15,25"; $lblStart.Size = "60,20"
 # Date button - opens the GitPigeon calendar pop-up (defined below)
@@ -150,7 +150,9 @@ $rbHourly = New-Object Windows.Forms.RadioButton; $rbHourly.Text = "Every"; $rbH
 $numHours = New-Object Windows.Forms.NumericUpDown; $numHours.Minimum = 1; $numHours.Maximum = 24; $numHours.Value = 2; $numHours.Location = "150,50"; $numHours.Size = "50,24"
 $lblHours = New-Object Windows.Forms.Label; $lblHours.Text = "hour(s)"; $lblHours.Location = "205,53"; $lblHours.Size = "55,20"
 $rbOnce   = New-Object Windows.Forms.RadioButton; $rbOnce.Text = "Once only (on the start date)"; $rbOnce.Location = "275,51"; $rbOnce.Size = "220,22"
-$grp.Controls.AddRange(@($lblStart, $btnDate, $lblAt, $dtTime, $rbDaily, $rbHourly, $numHours, $lblHours, $rbOnce))
+# Row 3: wake option (runs on battery are always allowed - see Save schedule)
+$chkWake  = New-Object Windows.Forms.CheckBox; $chkWake.Text = "Wake the PC from sleep to push"; $chkWake.Location = "15,79"; $chkWake.Size = "300,22"
+$grp.Controls.AddRange(@($lblStart, $btnDate, $lblAt, $dtTime, $rbDaily, $rbHourly, $numHours, $lblHours, $rbOnce, $chkWake))
 
 # ---------- calendar pop-up ----------
 # Standard Windows system colours only (follows the normal window style)
@@ -250,14 +252,14 @@ $btnDate.Add_Click({
 })
 
 # ---------- buttons ----------
-$btnPush   = Add-Ctl (New-Object Windows.Forms.Button) 15 220 130 32 "Push now"
-$btnSave   = Add-Ctl (New-Object Windows.Forms.Button) 155 220 130 32 "Save schedule"
-$btnRemove = Add-Ctl (New-Object Windows.Forms.Button) 295 220 150 32 "Remove selected"
-$btnRefresh = Add-Ctl (New-Object Windows.Forms.Button) 455 220 135 32 "Refresh"
+$btnPush   = Add-Ctl (New-Object Windows.Forms.Button) 15 248 130 32 "Push now"
+$btnSave   = Add-Ctl (New-Object Windows.Forms.Button) 155 248 130 32 "Save schedule"
+$btnRemove = Add-Ctl (New-Object Windows.Forms.Button) 295 248 150 32 "Remove selected"
+$btnRefresh = Add-Ctl (New-Object Windows.Forms.Button) 455 248 135 32 "Refresh"
 
 # ---------- scheduled tasks list ----------
-Add-Ctl (New-Object Windows.Forms.Label) 15 262 200 20 "Scheduled pushes" | Out-Null
-$list = Add-Ctl (New-Object Windows.Forms.ListView) 15 282 575 130
+Add-Ctl (New-Object Windows.Forms.Label) 15 290 200 20 "Scheduled pushes" | Out-Null
+$list = Add-Ctl (New-Object Windows.Forms.ListView) 15 310 575 130
 $list.View = "Details"; $list.FullRowSelect = $true; $list.MultiSelect = $false
 [void]$list.Columns.Add("Task", 150)
 [void]$list.Columns.Add("Repository", 230)
@@ -265,8 +267,8 @@ $list.View = "Details"; $list.FullRowSelect = $true; $list.MultiSelect = $false
 [void]$list.Columns.Add("Last result", 70)
 
 # ---------- log ----------
-Add-Ctl (New-Object Windows.Forms.Label) 15 420 200 20 "Log (latest 40 lines)" | Out-Null
-$txtLog = Add-Ctl (New-Object Windows.Forms.TextBox) 15 440 575 145
+Add-Ctl (New-Object Windows.Forms.Label) 15 448 200 20 "Log (latest 40 lines)" | Out-Null
+$txtLog = Add-Ctl (New-Object Windows.Forms.TextBox) 15 468 575 145
 $txtLog.Multiline = $true; $txtLog.ScrollBars = "Vertical"; $txtLog.ReadOnly = $true
 $txtLog.Font = New-Object System.Drawing.Font("Consolas", 8.5)
 
@@ -344,7 +346,20 @@ $btnSave.Add_Click({
     } else {
         $trigger = New-ScheduledTaskTrigger -Once -At $start -RepetitionInterval (New-TimeSpan -Hours ([int]$numHours.Value))
     }
-    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -RunOnlyIfNetworkAvailable
+    # Laptop-friendly settings:
+    #  - run on battery and keep running if unplugged (Windows' default would skip it)
+    #  - catch up after a missed run (PC off or asleep)
+    #  - no network check here: after waking, Wi-Fi can take a few seconds, so
+    #    gitpigeon-push.ps1 waits and retries instead
+    #  - stop a stuck run after 30 minutes
+    $sp = @{
+        StartWhenAvailable         = $true
+        AllowStartIfOnBatteries    = $true
+        DontStopIfGoingOnBatteries = $true
+        ExecutionTimeLimit         = (New-TimeSpan -Minutes 30)
+    }
+    if ($chkWake.Checked) { $sp.WakeToRun = $true }
+    $settings = New-ScheduledTaskSettingsSet @sp
 
     $name = "Push - " + (Split-Path $repo -Leaf)
     try {

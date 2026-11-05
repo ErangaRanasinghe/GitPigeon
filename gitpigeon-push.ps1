@@ -2,7 +2,7 @@
   gitpigeon-push.ps1
 
   Developed by : EMR Industries
-  Version      : 1.0
+  Version      : 1.1
   Built date   : 2026.11.05
 
   GitPigeon - commits (optional) and pushes a Git repo on a schedule. Works alongside TortoiseGit,
@@ -137,7 +137,12 @@ if ($CommitChanges) {
 }
 
 # ---------- 2. Anything to push? ----------
-$fetchOut = git fetch $Remote $Branch 2>&1
+# Retry the fetch: right after a laptop wakes or starts, the network may not be up yet
+for ($try = 1; $try -le 4; $try++) {
+    $fetchOut = git fetch $Remote $Branch 2>&1
+    if ($LASTEXITCODE -eq 0) { break }
+    if ($try -lt 4) { Start-Sleep -Seconds 20 }
+}
 if ($LASTEXITCODE -ne 0) {
     $why = Explain-GitError "$fetchOut"
     if ($why -eq "$fetchOut") { $why = "check network / credentials: $fetchOut" }

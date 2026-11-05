@@ -2,6 +2,20 @@
 
 All notable changes to GitPigeon are listed here.
 
+## [1.1] - 2026-11-05
+
+Laptop-friendly schedules.
+
+### Added
+- **Wake the PC from sleep to push** option for schedules
+- Network retry: waits up to about a minute for the network (for example, right after waking) before reporting a fetch error
+
+### Changed
+- Schedules now run on battery and keep running if the laptop is unplugged (Windows' default skipped them)
+- Missed runs still catch up after the PC is turned on; the task no longer requires the network to be up at the exact start time
+- A stuck run is stopped after 30 minutes
+- Schedules saved with 1.0 need **Save schedule** clicked again to pick up these settings
+
 ## [1.0] - 2026-11-05
 
 First release.
