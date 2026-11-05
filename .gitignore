@@ -1,0 +1,19 @@
+# Release builds (attach these to a release instead of committing them)
+dist/
+*.zip
+
+# Built launcher (made by tools/build-launcher.ps1, shipped in the release zip)
+GitPigeon.exe
+
+# Logs
+*.log
+
+# Windows
+Thumbs.db
+desktop.ini
+*.lnk
+
+# Editors
+.vscode/
+.idea/
+*.swp
