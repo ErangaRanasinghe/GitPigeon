@@ -191,13 +191,6 @@ GitPigeon/
 
 `GitPigeon.exe` is built from `launcher/GitPigeonLauncher.cs` and is not stored in the repository. It is included in each release zip. To build it from source, run `tools\build-launcher.ps1`; it uses the C# compiler built into Windows, so nothing needs installing.
 
-## Making a release
-
-1. Update `$AppVersion` and `$AppBuildDate` in `GitPigeon.ps1`, and the headers in the other files.
-2. Add the new version to `CHANGELOG.md`.
-3. Run `powershell -ExecutionPolicy Bypass -File tools\make-release.ps1`. It rebuilds `GitPigeon.exe` with the new version, then creates the zip.
-4. Commit, tag (for example `v1.1`), push, and attach `dist\GitPigeon-v1.1.zip` to a new release.
-
 ---
 
 © 2026 EMR Industries
