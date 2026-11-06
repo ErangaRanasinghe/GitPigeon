@@ -2,6 +2,20 @@
 
 All notable changes to GitPigeon are listed here.
 
+## [1.1.2] - 2026-11-06
+
+### Fixed
+- "Could not read Task Scheduler: The system cannot find the file specified": the schedule list failed on PCs where any unrelated scheduled task is damaged. GitPigeon now reads and removes tasks only in its own Task Scheduler folders.
+- Shows *Running* and *Disabled* in the list, and a hint when no schedules are saved yet
+
+## [1.1.1] - 2026-11-06
+
+### Fixed
+- Saved schedules did not appear in the **Scheduled pushes** list
+- Errors while reading Task Scheduler are now shown in the log box instead of being hidden
+- Schedules saved by the older version (Task Scheduler folder `GitAutoPush`) are listed as *(old - re-save)*; saving them again in GitPigeon moves them to the `GitPigeon` folder
+- **Remove selected** now removes the right task from either folder and reports errors
+
 ## [1.1] - 2026-11-05
 
 Laptop-friendly schedules.

@@ -3,8 +3,8 @@
   Keep gitpigeon-push.ps1 in the same folder and the images in assets\. Start with GitPigeon.exe (or "Start GitPigeon.bat").
 
   Developed by : EMR Industries
-  Version      : 1.1
-  Built date   : 2026.11.05
+  Version      : 1.1.2
+  Built date   : 2026.11.06
 #>
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
@@ -13,8 +13,8 @@ Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 $AppName      = "GitPigeon"
 $AppTagline   = "Delivers your Git commits on schedule."
 $AppDeveloper = "EMR Industries"
-$AppVersion   = "1.1"
-$AppBuildDate = "2026.11.05"
+$AppVersion   = "1.1.2"
+$AppBuildDate = "2026.11.06"
 
 # Remove the "downloaded from the internet" mark from GitPigeon's own files, so the
 # "Unknown Publisher" security prompt stops appearing on the next launch.
@@ -24,7 +24,8 @@ Get-ChildItem -Path $PSScriptRoot -File -Recurse -ErrorAction SilentlyContinue |
 
 $pushScript = Join-Path $PSScriptRoot "gitpigeon-push.ps1"
 $logFile    = "$env:USERPROFILE\gitpigeon.log"
-$taskPath   = "\GitPigeon\"
+$taskPath    = "\GitPigeon\"
+$oldTaskPath = "\GitAutoPush\"   # folder used by the pre-GitPigeon version
 
 if (-not (Test-Path $pushScript)) {
     [System.Windows.Forms.MessageBox]::Show("gitpigeon-push.ps1 must be in the same folder as this tool.", "Missing file") | Out-Null
@@ -273,20 +274,78 @@ $txtLog.Multiline = $true; $txtLog.ScrollBars = "Vertical"; $txtLog.ReadOnly = $
 $txtLog.Font = New-Object System.Drawing.Font("Consolas", 8.5)
 
 # ---------- logic ----------
+# Reads only GitPigeon's own Task Scheduler folders through the Task Scheduler
+# service. (Get-ScheduledTask lists every task on the PC and fails with
+# "The system cannot find the file specified" if any unrelated task is broken.)
+function Get-PigeonTasks {
+    $found = @()
+    $svc = New-Object -ComObject Schedule.Service
+    $svc.Connect()
+    foreach ($path in @($taskPath, $oldTaskPath)) {
+        try   { $folder = $svc.GetFolder($path.TrimEnd('\')) }
+        catch { continue }                       # folder not created yet = no schedules
+        foreach ($t in $folder.GetTasks(1)) {    # 1 = include hidden tasks
+            $found += [pscustomobject]@{
+                Name        = [string]$t.Name
+                Path        = $path
+                Description = [string]$t.Definition.RegistrationInfo.Description
+                NextRun     = $t.NextRunTime
+                LastRun     = $t.LastRunTime
+                LastResult  = [int64]$t.LastTaskResult
+                Enabled     = [bool]$t.Enabled
+            }
+        }
+    }
+    return $found
+}
+
 function Refresh-View {
     $list.Items.Clear()
-    Get-ScheduledTask -TaskPath $taskPath -ErrorAction SilentlyContinue | ForEach-Object {
-        $info = $_ | Get-ScheduledTaskInfo
-        $item = New-Object Windows.Forms.ListViewItem($_.TaskName)
-        [void]$item.SubItems.Add($_.Description)
-        [void]$item.SubItems.Add($(if ($info.NextRunTime) { $info.NextRunTime.ToString("yyyy.MM.dd HH:mm") } else { "-" }))
-        [void]$item.SubItems.Add($(if ($info.LastTaskResult -eq 0) { "OK" } elseif ($info.LastRunTime.Year -lt 2000) { "-" } else { "Error" }))
+    $problems = @()
+
+    try {
+        $tasks = @(Get-PigeonTasks)
+    } catch {
+        $tasks = @()
+        $problems += "Could not read Task Scheduler: $($_.Exception.Message)"
+    }
+
+    foreach ($t in $tasks) {
+        $next = "-"; $last = "-"
+        try {
+            if ($t.NextRun -and ([datetime]$t.NextRun).Year -ge 2000) { $next = ([datetime]$t.NextRun).ToString("yyyy.MM.dd HH:mm") }
+            if     ($t.LastResult -eq 0x41301) { $last = "Running" }
+            elseif ($t.LastResult -eq 0x41303 -or -not $t.LastRun -or ([datetime]$t.LastRun).Year -lt 2000) { $last = "-" }
+            elseif ($t.LastResult -eq 0) { $last = "OK" }
+            else   { $last = "Error" }
+        } catch { $next = "?"; $last = "?" }
+        if (-not $t.Enabled) { $next = "Disabled" }
+
+        $label = $t.Name
+        if ($t.Path -eq $oldTaskPath) { $label += "  (old - re-save)" }
+
+        $item = New-Object Windows.Forms.ListViewItem
+        $item.Text = $label
+        $item.Tag  = @{ Name = $t.Name; Path = $t.Path }
+        [void]$item.SubItems.Add($t.Description)
+        [void]$item.SubItems.Add([string]$next)
+        [void]$item.SubItems.Add([string]$last)
         [void]$list.Items.Add($item)
     }
-    if (Test-Path $logFile) {
-        $txtLog.Text = (Get-Content $logFile -Tail 40) -join "`r`n"
-        $txtLog.SelectionStart = $txtLog.Text.Length; $txtLog.ScrollToCaret()
-    }
+
+    $lines = @()
+    if (Test-Path $logFile) { $lines = @(Get-Content $logFile -Tail 40) }
+    if ($tasks.Count -eq 0 -and $problems.Count -eq 0) { $lines += "(No schedules saved yet. Fill in the details and click Save schedule.)" }
+    $lines += $problems
+    $txtLog.Text = $lines -join "`r`n"
+    $txtLog.SelectionStart = $txtLog.Text.Length; $txtLog.ScrollToCaret()
+}
+
+# Deletes one task from a GitPigeon folder (same reason: avoid Get-ScheduledTask)
+function Remove-PigeonTask($name, $path) {
+    $svc = New-Object -ComObject Schedule.Service
+    $svc.Connect()
+    $svc.GetFolder($path.TrimEnd('\')).DeleteTask($name, 0)
 }
 
 function Get-Repo {
@@ -365,6 +424,11 @@ $btnSave.Add_Click({
     try {
         Register-ScheduledTask -TaskName $name -TaskPath $taskPath -Action $action -Trigger $trigger `
             -Settings $settings -Description $repo -Force -ErrorAction Stop | Out-Null
+        # Same repo saved with the old version? Remove that copy so it doesn't run twice
+        try {
+            Get-PigeonTasks | Where-Object { $_.Path -eq $oldTaskPath -and $_.Description -eq $repo } |
+                ForEach-Object { Remove-PigeonTask $_.Name $_.Path }
+        } catch { }
         [Windows.Forms.MessageBox]::Show("Schedule saved: $name", "Saved") | Out-Null
     } catch {
         [Windows.Forms.MessageBox]::Show("Could not create the task:`n$($_.Exception.Message)", "Error") | Out-Null
@@ -374,9 +438,13 @@ $btnSave.Add_Click({
 
 $btnRemove.Add_Click({
     if ($list.SelectedItems.Count -eq 0) { return }
-    $name = $list.SelectedItems[0].Text
-    if ([Windows.Forms.MessageBox]::Show("Remove '$name'?", "Confirm", "YesNo") -eq "Yes") {
-        Unregister-ScheduledTask -TaskName $name -TaskPath $taskPath -Confirm:$false
+    $t = $list.SelectedItems[0].Tag
+    if ([Windows.Forms.MessageBox]::Show("Remove '$($t.Name)'?", "Confirm", "YesNo") -eq "Yes") {
+        try {
+            Remove-PigeonTask $t.Name $t.Path
+        } catch {
+            [Windows.Forms.MessageBox]::Show("Could not remove the task:`n$($_.Exception.Message)", "Error") | Out-Null
+        }
         Refresh-View
     }
 })

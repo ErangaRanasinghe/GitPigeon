@@ -2,8 +2,8 @@
   gitpigeon-push.ps1
 
   Developed by : EMR Industries
-  Version      : 1.1
-  Built date   : 2026.11.05
+  Version      : 1.1.2
+  Built date   : 2026.11.06
 
   GitPigeon - commits (optional) and pushes a Git repo on a schedule. Works alongside TortoiseGit,
   since TortoiseGit uses the same Git for Windows underneath.

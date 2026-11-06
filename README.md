@@ -8,7 +8,7 @@ Delivers your Git commits on schedule.
 
 GitPigeon is a small Windows tool that pushes your Git repositories automatically, daily, every few hours, or once on a chosen date. It works alongside TortoiseGit, because both use the same Git for Windows underneath.
 
-Developed by EMR Industries · Version 1.1 · Built 2026.11.05
+Developed by EMR Industries · Version 1.1.2 · Built 2026.11.06
 
 ---
 
@@ -33,7 +33,7 @@ Developed by EMR Industries · Version 1.1 · Built 2026.11.05
 
 ## Install
 
-1. Download `GitPigeon-v1.1.zip` from the **Releases** page.
+1. Download `GitPigeon-v1.1.2.zip` from the **Releases** page.
 2. Extract it to a folder only you can edit, for example:
    `%LOCALAPPDATA%\GitPigeon`
 3. Double-click **`GitPigeon.exe`** (the pigeon icon).
@@ -53,7 +53,7 @@ Windows shows *Windows protected your PC* (SmartScreen) or *Unknown Publisher* o
 
 **Option A: Unblock the zip before extracting**
 
-1. Right-click `GitPigeon-v1.1.zip` and choose **Properties**.
+1. Right-click `GitPigeon-v1.1.2.zip` and choose **Properties**.
 2. Tick **Unblock** at the bottom of the **General** tab, then click **OK**.
 3. Extract the zip and open `GitPigeon.exe`. No warning appears.
 
@@ -196,7 +196,7 @@ GitPigeon/
 1. Update `$AppVersion` and `$AppBuildDate` in `GitPigeon.ps1`, and the headers in the other files.
 2. Add the new version to `CHANGELOG.md`.
 3. Run `powershell -ExecutionPolicy Bypass -File tools\make-release.ps1`. It rebuilds `GitPigeon.exe` with the new version, then creates the zip.
-4. Commit, tag (for example `v1.1`), push, and attach `dist\GitPigeon-v1.1.zip` to a new release.
+4. Commit, tag (for example `v1.1`), push, and attach `dist\GitPigeon-v<version>.zip` to a new release.
 
 ---
 
