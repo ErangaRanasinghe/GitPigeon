@@ -2,8 +2,8 @@
   gitpigeon-push.ps1
 
   Developed by : EMR Industries
-  Version      : 1.1.2
-  Built date   : 2026.11.06
+  Version      : 1.1.3
+  Built date   : 2026.11.07
 
   GitPigeon - commits (optional) and pushes a Git repo on a schedule. Works alongside TortoiseGit,
   since TortoiseGit uses the same Git for Windows underneath.
@@ -138,11 +138,32 @@ if ($CommitChanges) {
 
 # ---------- 2. Anything to push? ----------
 # Retry the fetch: right after a laptop wakes or starts, the network may not be up yet
+$newBranch = $false
 for ($try = 1; $try -le 4; $try++) {
     $fetchOut = git fetch $Remote $Branch 2>&1
     if ($LASTEXITCODE -eq 0) { break }
+    # The remote is reachable but this branch doesn't exist there yet (new repo,
+    # or a branch never pushed). Not a network problem, so don't retry.
+    if ("$fetchOut" -match "couldn't find remote ref") { $newBranch = $true; break }
     if ($try -lt 4) { Start-Sleep -Seconds 20 }
 }
+
+# ---------- First push of a new branch: create it on the remote ----------
+if ($newBranch) {
+    $count = (git rev-list --count HEAD 2>$null)
+    if (-not $count -or [int]$count -eq 0) {
+        Log "Nothing to push: $Branch has no commits yet"
+        exit 0
+    }
+    $out = git push --set-upstream $Remote $Branch 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Log "First push: created $Remote/$Branch with $count commit(s)"
+        exit 0
+    }
+    Log ("ERROR: first push of $Branch failed: " + (Explain-GitError "$out"))
+    exit 1
+}
+
 if ($LASTEXITCODE -ne 0) {
     $why = Explain-GitError "$fetchOut"
     if ($why -eq "$fetchOut") { $why = "check network / credentials: $fetchOut" }

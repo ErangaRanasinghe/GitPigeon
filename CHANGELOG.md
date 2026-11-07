@@ -2,6 +2,11 @@
 
 All notable changes to GitPigeon are listed here.
 
+## [1.1.3] - 2026-11-07
+
+### Fixed
+- `fatal: couldn't find remote ref main`: pushing failed when the branch did not exist on the remote yet (for example, a brand-new repository). GitPigeon now creates the branch on the remote with the first push, and no longer reports this as a network or credentials problem.
+
 ## [1.1.2] - 2026-11-06
 
 ### Fixed

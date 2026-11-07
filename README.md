@@ -8,7 +8,7 @@ Delivers your Git commits on schedule.
 
 GitPigeon is a small Windows tool that pushes your Git repositories automatically, daily, every few hours, or once on a chosen date. It works alongside TortoiseGit, because both use the same Git for Windows underneath.
 
-Developed by EMR Industries · Version 1.1.2 · Built 2026.11.06
+Developed by EMR Industries · Version 1.1.3 · Built 2026.11.07
 
 ---
 
@@ -33,7 +33,7 @@ Developed by EMR Industries · Version 1.1.2 · Built 2026.11.06
 
 ## Install
 
-1. Download `GitPigeon-v1.1.2.zip` from the **Releases** page.
+1. Download `GitPigeon-v1.1.3.zip` from the **Releases** page.
 2. Extract it to a folder only you can edit, for example:
    `%LOCALAPPDATA%\GitPigeon`
 3. Double-click **`GitPigeon.exe`** (the pigeon icon).
@@ -53,7 +53,7 @@ Windows shows *Windows protected your PC* (SmartScreen) or *Unknown Publisher* o
 
 **Option A: Unblock the zip before extracting**
 
-1. Right-click `GitPigeon-v1.1.2.zip` and choose **Properties**.
+1. Right-click `GitPigeon-v1.1.3.zip` and choose **Properties**.
 2. Tick **Unblock** at the bottom of the **General** tab, then click **OK**.
 3. Extract the zip and open `GitPigeon.exe`. No warning appears.
 
@@ -139,6 +139,7 @@ Typical messages:
 |---|---|
 | `Pushed N commit(s) to origin/main` | Success |
 | `Nothing to push on main` | Already up to date |
+| `First push: created origin/main with N commit(s)` | The branch did not exist on the remote yet (for example, a new repository), so GitPigeon created it |
 | `BLOCKED: auto-commit refused, possible secret files: ...` | A file like `.env` would have been committed. Add it to `.gitignore` or commit manually. |
 | `pull --rebase failed: hit a conflict` | Resolve the conflict in TortoiseGit, then push |
 | `Blocked by Windows Defender Controlled folder access` | See *Troubleshooting* |

@@ -3,8 +3,8 @@
   Keep gitpigeon-push.ps1 in the same folder and the images in assets\. Start with GitPigeon.exe (or "Start GitPigeon.bat").
 
   Developed by : EMR Industries
-  Version      : 1.1.2
-  Built date   : 2026.11.06
+  Version      : 1.1.3
+  Built date   : 2026.11.07
 #>
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
@@ -13,8 +13,8 @@ Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 $AppName      = "GitPigeon"
 $AppTagline   = "Delivers your Git commits on schedule."
 $AppDeveloper = "EMR Industries"
-$AppVersion   = "1.1.2"
-$AppBuildDate = "2026.11.06"
+$AppVersion   = "1.1.3"
+$AppBuildDate = "2026.11.07"
 
 # Remove the "downloaded from the internet" mark from GitPigeon's own files, so the
 # "Unknown Publisher" security prompt stops appearing on the next launch.
